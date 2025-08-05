@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartHome Control</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            max-width: 430px;
+            margin: 0 auto;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .device-card {
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .device-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3B82F6;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 34px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        .color-picker {
+            display: none;
+            position: absolute;
+            bottom: 60px;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-option.selected {
+            border: 2px solid #000;
+        }
+        
+        .temp-slider, .brightness-slider, .fan-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #d1d5db;
+            outline: none;
+        }
+        
+        .temp-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3B82F6;
+            cursor: pointer;
+        }
+        
+        .brightness-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #F59E0B;
+            cursor: pointer;
+        }
+        
+        .fan-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="container mx-auto px-4 py-6">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8 px-2">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">SmartHome</h1>
+                <p class="text-gray-600 font-medium">Living Room</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e3796a51-3d30-48c8-aaa2-4c08e1dc27d3.png" alt="User profile picture with a gray background and white silhouette of a person" class="rounded-full" />
+            </div>
+        </header>
+        
+        <!-- Tab Options -->
+        <div class="flex justify-between items-center mb-6 px-2">
+            <button onclick="showDesign('grid')" class="px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all">Grid View</button>
+            <button onclick="showDesign('list')" class="px-4 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-all">List View</button>
+            <button onclick="showDesign('room')" class="px-4 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-all">Room View</button>
+        </div>
+        
+        <!-- Grid View (Default) -->
+        <div id="grid-view" class="grid grid-cols-2 gap-4">
+            <!-- AC Card -->
+            <div class="device-card bg-white rounded-xl p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-lg">Air Conditioner</h3>
+                        <p class="text-gray-500 text-sm">Cooling at 25°C</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked onclick="toggleDevice(this, 'ac')">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/aa1882ce-1a61-4f5d-a960-b930efb62085.png" alt="Modern air conditioner unit showing a digital temperature display" class="w-full h-24 object-contain my-2" />
+                <div class="mt-2">
+                    <input type="range" min="16" max="30" value="25" class="temp-slider" onchange="updateACValue(this)">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>16°</span>
+                        <span>30°</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Fan Card -->
+            <div class="device-card bg-white rounded-xl p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-lg">Ceiling Fan</h3>
+                        <p class="text-gray-500 text-sm">Speed: Medium</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onclick="toggleDevice(this, 'fan')">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/11f34a62-1b97-4847-a512-6201e8b44c16.png" alt="Modern ceiling fan with three blades and LED light in the center" class="w-full h-24 object-contain my-2" />
+                <div class="mt-2">
+                    <input type="range" min="0" max="3" value="2" class="fan-slider" onchange="updateFanValue(this)">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Low</span>
+                        <span>High</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Light Card -->
+            <div class="device-card bg-white rounded-xl p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-lg">Table Lamp</h3>
+                        <p class="text-gray-500 text-sm">Warm White</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" onclick="toggleDevice(this, 'light')">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fa3252c4-c4d0-402c-845d-ff5e8c6d1da9.png" alt="Contemporary table lamp with fabric shade providing warm white light" class="w-full h-24 object-contain my-2" />
+                <div class="relative">
+                    <div class="flex justify-between mb-1">
+                        <button onclick="showColorPicker('light1')" class="px-2 py-1 bg-gray-100 rounded-md text-xs">Color</button>
+                        <button onclick="expandControl('light')" class="px-2 py-1 bg-gray-100 rounded-md text-xs">Expand</button>
+                    </div>
+                    <input type="range" min="0" max="100" value="70" class="brightness-slider" onchange="updateLightValue(this)">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>0%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <div id="light1-color-picker" class="color-picker">
+                    <div class="flex flex-wrap justify-center">
+                        <div class="color-option bg-white border border-gray-300 selected" onclick="selectColor(this, 'light1', '#FFFFFF')"></div>
+                        <div class="color-option bg-yellow-100" onclick="selectColor(this, 'light1', '#FEF3C7')"></div>
+                        <div class="color-option bg-yellow-300" onclick="selectColor(this, 'light1', '#FCD34D')"></div>
+                        <div class="color-option bg-red-500" onclick="selectColor(this, 'light1', '#EF4444')"></div>
+                        <div class="color-option bg-green-500" onclick="selectColor(this, 'light1', '#10B981')"></div>
+                        <div class="color-option bg-blue-500" onclick="selectColor(this, 'light1', '#3B82F6')"></div>
+                        <div class="color-option bg-purple-500" onclick="selectColor(this, 'light1', '#8B5CF6')"></div>
+                        <div class="color-option bg-pink-500" onclick="selectColor(this, 'light1', '#EC4899')"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TV Card -->
+            <div class="device-card bg-white rounded-xl p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="font-semibold text-lg">Smart TV</h3>
+                        <p class="text-gray-500 text-sm">Samsung 55"</p>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" checked onclick="toggleDevice(this, 'tv')">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/2c7c0e6d-d839-42d3-ab1b-0842b1fd9e01.png" alt="Large flat-screen smart TV mounted on a modern entertainment center" class="w-full h-24 object-contain my-2" />
+                <div class="mt-2 flex justify-between">
+                    <button class="px-3 py-1 bg-blue-100 text-blue-600 rounded-md text-sm">Source</button>
+                    <button class="px-3 py-1 bg-blue-100 text-blue-600 rounded-md text-sm">Volume</button>
+                    <button class="px-3 py-1 bg-blue-100 text-blue-600 rounded-md text-sm">Channels</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- List View (Hidden by default) -->
+        <div id="list-view" class="hidden">
+            <div class="bg-white rounded-xl overflow-hidden">
+                <!-- AC Item -->
+                <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/a019a68d-1e2e-4e6a-b507-b329dfe28097.png" alt="Air conditioner icon showing a fan and snowflake symbols for cooling" class="w-12 h-12 mr-3" />
+                        <div>
+                            <h3 class="font-semibold">Air Conditioner</h3>
+                            <p class="text-sm text-gray-500">25°C • On</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="range" min="16" max="30" value="25" class="temp-slider w-20 mr-3" onchange="updateACValue(this)">
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked onclick="toggleDevice(this, 'ac-list')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Fan Item -->
+                <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/c775d531-ca13-49cd-adb1-21352ecc9cb7.png" alt="Ceiling fan icon showing rotating blades for air circulation" class="w-12 h-12 mr-3" />
+                        <div>
+                            <h3 class="font-semibold">Ceiling Fan</h3>
+                            <p class="text-sm text-gray-500">Speed 2 • Off</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="range" min="0" max="3" value="0" class="fan-slider w-20 mr-3" onchange="updateFanValue(this)">
+                        <label class="toggle-switch">
+                            <input type="checkbox" onclick="toggleDevice(this, 'fan-list')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Light Item -->
+                <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/feeca567-33d9-41cd-ba25-0ad6e4d40dbb.png" alt="Table lamp icon emitting warm yellow light rays for illumination" class="w-12 h-12 mr-3" />
+                        <div>
+                            <h3 class="font-semibold">Table Lamp</h3>
+                            <p class="text-sm text-gray-500">70% • Warm White</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="range" min="0" max="100" value="70" class="brightness-slider w-20 mr-3" onchange="updateLightValue(this)">
+                        <label class="toggle-switch">
+                            <input type="checkbox" onclick="toggleDevice(this, 'light-list')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- TV Item -->
+                <div class="p-4 flex items-center justify-between">
+                    <div class="flex items-center">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/6cd5af34-a13f-4b4c-a722-058b38794476.png" alt="Flat-screen TV icon with colorful display representing smart television" class="w-12 h-12 mr-3" />
+                        <div>
+                            <h3 class="font-semibold">Smart TV</h3>
+                            <p class="text-sm text-gray-500">Channel 14 • On</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked onclick="toggleDevice(this, 'tv-list')">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Room View (Hidden by default) -->
+        <div id="room-view" class="hidden">
+            <div class="relative bg-gray-200 rounded-xl h-64 mb-4">
+                <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/54b3ca80-029d-45b3-904e-a15d48b687a6.png" alt="Living room layout with furniture and appliance locations marked" class="w-full h-full object-cover rounded-xl" />
+                
+                <!-- AC Control in Room -->
+                <div class="absolute bottom-4 left-4 bg-white p-2 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <p class="text-sm">AC: 25°C</p>
+                    </div>
+                </div>
+                
+                <!-- Fan Control in Room -->
+                <div class="absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-white p-2 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-gray-100 rounded-full flex items-center justify-center mr-2">
+                            <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <p class="text-sm">Fan: Off</p>
+                    </div>
+                </div>
+                
+                <!-- Light Control in Room -->
+                <div class="absolute top-4 right-4 bg-white p-2 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center mr-2">
+                            <div class="w-4 h-4 bg-yellow-300 rounded-full"></div>
+                        </div>
+                        <p class="text-sm">Lamp: 70%</p>
+                    </div>
+                </div>
+                
+                <!-- TV Control in Room -->
+                <div class="absolute bottom-4 right-4 bg-white p-2 rounded-lg shadow-md">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full"></div>
+                        </div>
+                        <p class="text-sm">TV: On</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl p-4">
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="controlDevice('ac')" class="flex flex-col items-center p-2 rounded-lg bg-gray-50">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/fb3ee251-56a9-4db7-a938-fc35ff5a8a49.png" alt="Air conditioner control icon in simplified style" class="w-8 h-8 mb-1" />
+                        <span class="text-xs">AC</span>
+                    </button>
+                    <button onclick="controlDevice('fan')" class="flex flex-col items-center p-2 rounded-lg bg-gray-50">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/cceca9cc-746c-42ab-b382-f05330b8681e.png" alt="Ceiling fan control icon with multiple speed settings" class="w-8 h-8 mb-1" />
+                        <span class="text-xs">Fan</span>
+                    </button>
+                    <button onclick="controlDevice('light')" class="flex flex-col items-center p-2 rounded-lg bg-gray-50">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/b2befdab-5034-4e95-9f46-f656a9fcb36a.png" alt="Light bulb control icon with adjustable brightness" class="w-8 h-8 mb-1" />
+                        <span class="text-xs">Light</span>
+                    </button>
+                    <button onclick="controlDevice('tv')" class="flex flex-col items-center p-2 rounded-lg bg-gray-50">
+                        <img src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/f784b22f-d1e3-4af0-bb6a-9e65fa9d63cd.png" alt="Television control icon with channel and volume options" class="w-8 h-8 mb-1" />
+                        <span class="text-xs">TV</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show different design views
+        function showDesign(view) {
+            document.getElementById('grid-view').classList.add('hidden');
+            document.getElementById('list-view').classList.add('hidden');
+            document.getElementById('room-view').classList.add('hidden');
+            
+            document.getElementById(`${view}-view`).classList.remove('hidden');
+            
+            // Update button states
+            const buttons = document.querySelectorAll('button');
+            buttons.forEach(btn => {
+                if (btn.textContent.includes(view.charAt(0).toUpperCase() + view.slice(1))) {
+                    btn.classList.add('bg-blue-500', 'text-white');
+                    btn.classList.remove('border', 'border-gray-300');
+                } else {
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('border', 'border-gray-300');
+                }
+            });
+        }
+        
+        // Toggle device on/off
+        function toggleDevice(element, device) {
+            const isOn = element.checked;
+            console.log(`${device} is now ${isOn ? 'ON' : 'OFF'}`);
+            
+            // Update the status text if needed
+            const statusElement = document.querySelector(`.${device} .text-gray-500`);
+            if (statusElement) {
+                statusElement.textContent = isOn ? 'On' : 'Off';
+            }
+        }
+        
+        // Update AC temperature
+        function updateACValue(element) {
+            const temp = element.value;
+            console.log(`AC temperature set to ${temp}°C`);
+            
+            // Update the status text
+            const statusElements = document.querySelectorAll(".text-gray-500");
+            statusElements.forEach(el => {
+                if (el.textContent.includes("°C") || el.textContent.includes("Cooling")) {
+                    el.textContent = `Cooling at ${temp}°C`;
+                }
+            });
+        }
+        
+        // Update fan speed
+        function updateFanValue(element) {
+            const speed = element.value;
+            const speedText = ["Off", "Low", "Medium", "High"][speed];
+            console.log(`Fan speed set to ${speedText}`);
+            
+            // Update the status text
+            const statusElements = document.querySelectorAll(".text-gray-500");
+            statusElements.forEach(el => {
+                if (el.textContent.includes("Speed")) {
+                    el.textContent = `Speed: ${speedText}`;
+                }
+            });
+        }
+        
+        // Update light brightness
+        function updateLightValue(element) {
+            const brightness = element.value;
+            console.log(`Light brightness set to ${brightness}%`);
+            
+            // Update the status text
+            const statusElements = document.querySelectorAll(".text-gray-500");
+            statusElements.forEach(el => {
+                if (el.textContent.includes("%") && el.textContent.includes("Lamp")) {
+                    el.textContent = `${brightness}% • Warm White`;
+                }
+            });
+        }
+        
+        // Show color picker for lights
+        function showColorPicker(lightId) {
+            const picker = document.getElementById(`${lightId}-color-picker`);
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+            
+            // Close other open pickers
+            document.querySelectorAll('.color-picker').forEach(p => {
+                if (p.id !== `${lightId}-color-picker`) {
+                    p.style.display = 'none';
+                }
+            });
+        }
+        
+        // Select color for lights
+        function selectColor(element, lightId, colorCode) {
+            // Remove selected class from all options
+            element.parentElement.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            element.classList.add('selected');
+            
+            console.log(`${lightId} color changed to ${colorCode}`);
+            
+            // Update status text with color name
+            let colorName = "White";
+            switch(colorCode) {
+                case '#FEF3C7': colorName = "Warm White"; break;
+                case '#FCD34D': colorName = "Yellow"; break;
+                case '#EF4444': colorName = "Red"; break;
+                case '#10B981': colorName = "Green"; break;
+                case '#3B82F6': colorName = "Blue"; break;
+                case '#8B5CF6': colorName = "Purple"; break;
+                case '#EC4899': colorName = "Pink"; break;
+            }
+            
+            const statusElements = document.querySelectorAll(".text-gray-500");
+            statusElements.forEach(el => {
+                if (el.textContent.includes("Warm White") || el.textContent.includes(colorName) || 
+                    (el.textContent.includes("%") && el.textContent.includes("Lamp"))) {
+                    const brightness = el.textContent.split(' • ')[0].replace('%', '') || '70';
+                    el.textContent = `${brightness}% • ${colorName}`;
+                }
+            });
+            
+            // Close the picker
+            document.getElementById(`${lightId}-color-picker`).style.display = 'none';
+        }
+        
+        // Expand control for detailed settings
+        function expandControl(device) {
+            console.log(`Expanded ${device} controls`);
+            // In a real app, this would show a detailed control panel
+            alert(`Opening detailed ${device} controls...`);
+        }
+        
+        // Control device from room view
+        function controlDevice(device) {
+            console.log(`Controlling ${device} from room view`);
+            // In a real app, this would show a modal with control options
+            alert(`Opening ${device} controls from room view...`);
+        }
+        
+        // Close all color pickers when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.color-option') && !e.target.closest('[onclick*="showColorPicker"]')) {
+                document.querySelectorAll('.color-picker').forEach(picker => {
+                    picker.style.display = 'none';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
